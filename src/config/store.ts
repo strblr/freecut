@@ -28,10 +28,18 @@ export const useStore = create<Store>()(
         }
         return theme;
       },
-      setTheme: theme => set({ theme }),
-      setCurrentProject: project => set({ currentProject: project }),
-      closeCurrentProject: () => set({ currentProject: null }),
-      toggleInfoView: () => set({ showInfoView: !get().showInfoView })
+      setTheme: theme => {
+        set({ theme });
+      },
+      setCurrentProject: project => {
+        set({ currentProject: project });
+      },
+      closeCurrentProject: () => {
+        set({ currentProject: null });
+      },
+      toggleInfoView: () => {
+        set({ showInfoView: !get().showInfoView });
+      }
     }),
     {
       name: "freecut-store",

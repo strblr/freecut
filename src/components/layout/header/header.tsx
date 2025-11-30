@@ -12,11 +12,15 @@ import {
 } from "@/components";
 import { useStore } from "@/config";
 
-export function Header() {
+export interface HeaderProps {
+  onLayoutReset: () => void;
+}
+
+export function Header({ onLayoutReset }: HeaderProps) {
   const currentProject = useStore(store => store.currentProject);
 
   return (
-    <header className="flex items-center gap-5 px-1 py-1">
+    <header className="flex items-center gap-5">
       <div className="flex items-center gap-2">
         <img src="/logo.png" alt="logo" className="size-6" />
         <h1 className="text-lg font-bold">FreeCut</h1>
@@ -36,7 +40,7 @@ export function Header() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <ViewMenu />
+        <ViewMenu onLayoutReset={onLayoutReset} />
         <DropdownMenu>
           <DropdownMenuTrigger className="px-1">Help</DropdownMenuTrigger>
           <DropdownMenuContent align="start">

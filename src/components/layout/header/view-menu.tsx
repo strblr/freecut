@@ -2,6 +2,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
@@ -12,7 +13,11 @@ import {
 } from "@/components";
 import { useStore } from "@/config";
 
-export function ViewMenu() {
+export interface ViewMenuProps {
+  onLayoutReset: () => void;
+}
+
+export function ViewMenu({ onLayoutReset }: ViewMenuProps) {
   const theme = useStore(store => store.theme);
   const showInfoView = useStore(store => store.showInfoView);
 
@@ -24,6 +29,10 @@ export function ViewMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger className="px-1">View</DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="overflow-hidden">
+        <DropdownMenuItem onClick={onLayoutReset}>
+          Reset layout
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuCheckboxItem
           checked={showInfoView}
           onClick={useStore.getState().toggleInfoView}
