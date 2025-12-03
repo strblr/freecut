@@ -71,7 +71,8 @@ export function FileExplorerHeader({
         variant="ghost"
         disabled={stack.length <= 1}
         onClick={handleNavigateBack}
-        {...info("Navigate back", "Navigate back to the parent directory.")}
+        aria-label="Navigate back"
+        ref={info("Navigate back", "Navigate back to the parent directory.")}
       >
         <ArrowLeftIcon className="size-4" />
       </Button>
@@ -87,7 +88,8 @@ export function FileExplorerHeader({
                   <BreadcrumbLink
                     asChild
                     onClick={() => onNavigate(0)}
-                    {...info(
+                    aria-label="Navigate to root directory"
+                    ref={info(
                       "Navigate to root directory",
                       "Navigate to the root directory."
                     )}
@@ -119,14 +121,16 @@ export function FileExplorerHeader({
         variant="ghost"
         className="ml-auto"
         onClick={handleAddFolder}
-        {...info("Add folder", "Add a new folder to the current directory.")}
+        aria-label="Add folder"
+        ref={info("Add folder", "Add a new folder to the current directory.")}
       >
         <FolderPlusIcon className="size-4" />
       </Button>
       <Button
         size="icon-xs"
         variant="ghost"
-        {...info(
+        aria-label="Sort files"
+        ref={info(
           "Sort files",
           "Sort the file list by name, size, type, or date."
         )}
@@ -136,7 +140,8 @@ export function FileExplorerHeader({
       <Button
         size="icon-xs"
         variant="ghost"
-        {...info(
+        aria-label="Search files"
+        ref={info(
           "Search files",
           "Search the file list by keywords or patterns."
         )}

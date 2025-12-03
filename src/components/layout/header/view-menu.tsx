@@ -32,7 +32,7 @@ export function ViewMenu({ onLayoutReset }: ViewMenuProps) {
       <DropdownMenuContent align="start" className="overflow-hidden">
         <DropdownMenuItem
           onClick={onLayoutReset}
-          {...info(
+          ref={info(
             "Reset layout",
             "Reset the panels sizes and visibility to their initial state."
           )}
@@ -44,12 +44,9 @@ export function ViewMenu({ onLayoutReset }: ViewMenuProps) {
         <DropdownMenuCheckboxItem
           checked={showInfoView}
           onCheckedChange={useStore.getState().toggleShowInfoView}
-          {...info(
+          ref={info(
             "Show info view",
-            <>
-              Toggle this info view on and off. Hide it if you need space, or
-              show it if you want to learn more about a feature.
-            </>
+            "Toggle this info view on and off. Hide it if you need space, or show it if you want to learn more about a feature."
           )}
         >
           Show info view
@@ -57,13 +54,9 @@ export function ViewMenu({ onLayoutReset }: ViewMenuProps) {
         <DropdownMenuSeparator />
         <DropdownMenuSub>
           <DropdownMenuSubTrigger
-            {...info(
+            ref={info(
               "Theme",
-              <>
-                Switch the color scheme of the application between light, dark,
-                and system. The system theme will follow the user's system
-                preference.
-              </>
+              "Switch the color scheme of the application between light, dark, and system. The system theme will follow the user's system preference."
             )}
           >
             Theme

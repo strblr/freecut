@@ -52,12 +52,10 @@ export function Header({ onLayoutReset }: HeaderProps) {
           variant="ghost"
           size="icon-sm"
           onClick={() => useStore.getState().toggleShowInfoView()}
-          {...info(
+          aria-label="Toggle info view"
+          ref={info(
             "Toggle info view",
-            <>
-              Toggle this info view on and off. Hide it if you need space, or
-              show it if you want to learn more about a feature.
-            </>
+            "Toggle this info view on and off. Hide it if you need space, or show it if you want to learn more about a feature."
           )}
         >
           <InfoIcon className="size-4" />

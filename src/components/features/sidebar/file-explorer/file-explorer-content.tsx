@@ -129,17 +129,11 @@ function FileItem({ item, onNavigate }: FileItemProps) {
         "flex w-18 flex-col items-center gap-2 rounded p-1 transition-colors hover:bg-accent hover:text-accent-foreground",
         { "cursor-pointer": item.handle.kind === "directory" }
       )}
-      {...info(
+      ref={info(
         item.handle.name,
-        item.handle.kind === "directory" ? (
-          "Click to navigate to this directory"
-        ) : (
-          <>
-            <div>{capitalize(item.type)} file</div>
-            <div>{formatFileSize(item.file?.size)}</div>
-            <div>Last modified: {formatFileDate(item.file?.lastModified)}</div>
-          </>
-        )
+        item.handle.kind === "directory"
+          ? "Click to navigate to this directory"
+          : `${capitalize(item.type)} file\n\nSize: ${formatFileSize(item.file?.size)}\n\nLast modified: ${formatFileDate(item.file?.lastModified)}`
       )}
     >
       {icon}
