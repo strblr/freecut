@@ -46,6 +46,7 @@ export function InfoView() {
     );
     document.addEventListener("pointermove", listener);
     return () => {
+      listener.cancel();
       document.removeEventListener("pointermove", listener);
     };
   }, []);
@@ -58,8 +59,8 @@ export function InfoView() {
         "The info view is a feature that displays a short description of the feature that is currently being hovered over. It is a useful tool to find your way around the app."
       )}
     >
-      <h1 className="flex min-h-7 items-center justify-between bg-muted px-2 py-1 font-bold">
-        <span>{data?.title}</span>
+      <h1 className="flex h-7 items-center justify-between bg-muted px-2 py-1 font-bold">
+        <span className="truncate">{data?.title}</span>
         <Button
           variant="ghost"
           size="icon-xs"
