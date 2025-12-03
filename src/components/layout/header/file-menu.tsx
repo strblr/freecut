@@ -1,5 +1,5 @@
 import { useLiveQuery } from "dexie-react-hooks";
-import { isEmpty } from "lodash-es";
+import { isEmpty, pick } from "lodash-es";
 import {
   Badge,
   DropdownMenu,
@@ -25,6 +25,7 @@ export function FileMenu() {
     const handle = await window.showDirectoryPicker({
       mode: "readwrite"
     });
+    const project = { handle, computer: true };
     await db.transaction("rw", db.recentProjects, async () => {
       const existing = await db.recentProjects
         .where({ name: handle.name })
@@ -32,12 +33,11 @@ export function FileMenu() {
         .first();
       const updatedAt = Date.now();
       if (existing) {
-        await db.recentProjects.update(existing.id, { handle, updatedAt });
+        await db.recentProjects.update(existing.id, { ...project, updatedAt });
       } else {
         await db.recentProjects.add({
           name: handle.name,
-          computer: true,
-          handle,
+          ...project,
           updatedAt
         });
       }
@@ -51,7 +51,7 @@ export function FileMenu() {
         );
       }
     });
-    useStore.getState().setCurrentProject(handle);
+    useStore.getState().setCurrentProject(project);
   };
 
   const handleOpenFromRecent = async (project: RecentProject) => {
@@ -60,7 +60,9 @@ export function FileMenu() {
     });
     if (permission === "granted") {
       await db.recentProjects.update(project.id, { updatedAt: Date.now() });
-      useStore.getState().setCurrentProject(project.handle);
+      useStore
+        .getState()
+        .setCurrentProject(pick(project, ["handle", "computer"]));
     }
   };
 

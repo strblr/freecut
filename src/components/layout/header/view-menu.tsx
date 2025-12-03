@@ -9,7 +9,8 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
+  info
 } from "@/components";
 import { useStore } from "@/config";
 
@@ -29,19 +30,44 @@ export function ViewMenu({ onLayoutReset }: ViewMenuProps) {
     <DropdownMenu>
       <DropdownMenuTrigger className="px-1">View</DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="overflow-hidden">
-        <DropdownMenuItem onClick={onLayoutReset}>
+        <DropdownMenuItem
+          onClick={onLayoutReset}
+          {...info(
+            "Reset layout",
+            "Reset the panels sizes and visibility to their initial state."
+          )}
+        >
           Reset layout
         </DropdownMenuItem>
         <DropdownMenuSeparator />
+        <DropdownMenuCheckboxItem>Show sidebar</DropdownMenuCheckboxItem>
         <DropdownMenuCheckboxItem
           checked={showInfoView}
-          onClick={useStore.getState().toggleInfoView}
+          onCheckedChange={useStore.getState().toggleShowInfoView}
+          {...info(
+            "Show info view",
+            <>
+              Toggle this info view on and off. Hide it if you need space, or
+              show it if you want to learn more about a feature.
+            </>
+          )}
         >
           Show info view
         </DropdownMenuCheckboxItem>
         <DropdownMenuSeparator />
         <DropdownMenuSub>
-          <DropdownMenuSubTrigger>Theme</DropdownMenuSubTrigger>
+          <DropdownMenuSubTrigger
+            {...info(
+              "Theme",
+              <>
+                Switch the color scheme of the application between light, dark,
+                and system. The system theme will follow the user's system
+                preference.
+              </>
+            )}
+          >
+            Theme
+          </DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
             <DropdownMenuRadioGroup
               value={theme}

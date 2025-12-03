@@ -3,13 +3,18 @@ import { persist } from "zustand/middleware";
 
 export interface Store {
   theme: "light" | "dark" | "system";
-  currentProject: FileSystemDirectoryHandle | null;
+  currentProject: CurrentProject | null;
   showInfoView: boolean;
   computedTheme: () => "light" | "dark";
   setTheme: (theme: Store["theme"]) => void;
-  setCurrentProject: (project: FileSystemDirectoryHandle) => void;
+  setCurrentProject: (project: CurrentProject) => void;
   closeCurrentProject: () => void;
-  toggleInfoView: () => void;
+  toggleShowInfoView: (show?: boolean) => void;
+}
+
+export interface CurrentProject {
+  handle: FileSystemDirectoryHandle;
+  computer: boolean;
 }
 
 export const useStore = create<Store>()(
@@ -37,8 +42,8 @@ export const useStore = create<Store>()(
       closeCurrentProject: () => {
         set({ currentProject: null });
       },
-      toggleInfoView: () => {
-        set({ showInfoView: !get().showInfoView });
+      toggleShowInfoView: (show?: boolean) => {
+        set({ showInfoView: show ?? !get().showInfoView });
       }
     }),
     {

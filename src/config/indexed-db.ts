@@ -3,8 +3,8 @@ import { Dexie, type EntityTable } from "dexie";
 export interface RecentProject {
   id: number;
   name: string;
-  computer: boolean;
   handle: FileSystemDirectoryHandle;
+  computer: boolean;
   updatedAt: number;
 }
 
