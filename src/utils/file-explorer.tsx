@@ -1,5 +1,13 @@
+import {
+  FileAudioIcon,
+  FileIcon,
+  FileImageIcon,
+  FileTextIcon,
+  FileVideoIcon,
+  FolderIcon
+} from "lucide-react";
 import prettyBytes from "pretty-bytes";
-import { sortBy } from "lodash-es";
+import { capitalize, sortBy } from "lodash-es";
 import { dayjs } from "@/utils";
 
 export interface FileSystemItem {
@@ -30,12 +38,45 @@ export async function readDirectoryItems(directory: FileSystemDirectoryHandle) {
   );
 }
 
-export function formatFileSize(bytes?: number) {
-  return bytes === undefined ? null : prettyBytes(bytes);
+export function formatFileSize(item: FileSystemItem) {
+  return prettyBytes(item.file?.size ?? 0);
 }
 
-export function formatFileDate(timestamp?: number) {
-  return timestamp === undefined ? null : dayjs(timestamp).fromNow();
+export function formatFileDate(item: FileSystemItem) {
+  return dayjs(item.file?.lastModified ?? 0).fromNow();
+}
+
+export function getFileInfo(item: FileSystemItem): string {
+  if (item.handle.kind === "directory") {
+    return "Click to navigate to this directory";
+  }
+  return `${capitalize(item.type)} file\n\nSize: ${formatFileSize(item)}\n\nLast modified: ${formatFileDate(item)}`;
+}
+
+export function getFileIcon(item: FileSystemItem) {
+  if (item.handle.kind === "directory") {
+    return <FolderIcon className="size-8 text-primary" />;
+  }
+  switch (item.type) {
+    case "image":
+      return (
+        <FileImageIcon className="size-8 text-rose-600 dark:text-rose-400" />
+      );
+    case "video":
+      return (
+        <FileVideoIcon className="size-8 text-purple-600 dark:text-purple-400" />
+      );
+    case "audio":
+      return (
+        <FileAudioIcon className="size-8 text-fuchsia-600 dark:text-fuchsia-400" />
+      );
+    case "text":
+      return (
+        <FileTextIcon className="size-8 text-slate-600 dark:text-slate-400" />
+      );
+    default:
+      return <FileIcon className="size-8 text-stone-600 dark:text-stone-400" />;
+  }
 }
 
 function getFileType(filename: string) {

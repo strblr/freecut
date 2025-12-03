@@ -13,8 +13,8 @@ interface InfoData {
 
 const infoMap = new WeakMap<object, InfoData>();
 
-export function info(title: string, description: string) {
-  return (node: object | null) => {
+export function info<E extends Element>(title: string, description: string) {
+  return (node: E | null) => {
     node && infoMap.set(node, { title, description });
   };
 }

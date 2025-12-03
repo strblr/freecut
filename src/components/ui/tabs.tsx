@@ -53,8 +53,13 @@ function TabsContent({
 }: React.ComponentProps<typeof TabsPrimitive.Content>) {
   return (
     <TabsPrimitive.Content
+      // "keep mounted" hack: https://github.com/radix-ui/primitives/issues/2359#issuecomment-2481321719
+      forceMount
       data-slot="tabs-content"
-      className={cn("flex-1 outline-none", className)}
+      className={cn(
+        "flex-1 outline-none data-[state=inactive]:hidden",
+        className
+      )}
       {...props}
     />
   );

@@ -29,6 +29,7 @@
     "dexie-react-hooks": "^4.2.0",
     "lodash-es": "^4.17.21",
     "lucide-react": "^0.555.0",
+    "merge-refs": "^2.0.0",
     "prettier": "^3.7.3",
     "prettier-plugin-tailwindcss": "^0.7.1",
     "pretty-bytes": "^7.1.0",

@@ -1,16 +1,16 @@
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import {
-  File,
-  Folder,
-  FileImage,
-  FileVideo,
-  FileAudio,
-  FileText,
-  AlertCircle,
-  FolderOpenIcon
-} from "lucide-react";
-import { capitalize, isEmpty, last } from "lodash-es";
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+  type HTMLAttributes,
+  type Ref,
+  type ReactNode
+} from "react";
+import { useQuery } from "@tanstack/react-query";
+import { AlertCircle, FolderOpenIcon } from "lucide-react";
+import { isEmpty, last } from "lodash-es";
+import mergeRefs from "merge-refs";
 import {
   Button,
   Empty,
@@ -24,8 +24,8 @@ import {
 } from "@/components";
 import {
   cn,
-  formatFileDate,
-  formatFileSize,
+  getFileIcon,
+  getFileInfo,
   readDirectoryItems,
   type FileSystemItem
 } from "@/utils";
@@ -100,10 +100,50 @@ export function FileExplorerContent({
 
   return (
     <div className="flex flex-wrap items-start gap-1">
-      {items.map(item => (
-        <FileItem key={item.handle.name} item={item} onNavigate={onNavigate} />
-      ))}
+      {items.map(item =>
+        item.type === "image" ? (
+          <ImageFileItem key={item.handle.name} item={item} />
+        ) : (
+          <FileItem
+            key={item.handle.name}
+            item={item}
+            onNavigate={onNavigate}
+          />
+        )
+      )}
     </div>
+  );
+}
+
+// FileItemBase
+
+interface FileItemBaseProps extends HTMLAttributes<HTMLButtonElement> {
+  ref?: Ref<HTMLButtonElement>;
+  icon: ReactNode;
+  name: ReactNode;
+}
+
+function FileItemBase({
+  ref,
+  icon,
+  name,
+  className,
+  ...props
+}: FileItemBaseProps) {
+  return (
+    <button
+      ref={ref}
+      {...props}
+      className={cn(
+        "flex w-18 flex-col items-center gap-2 rounded p-1 transition-colors hover:bg-accent hover:text-accent-foreground",
+        className
+      )}
+    >
+      {icon}
+      <span className="line-clamp-3 text-center text-xs leading-tight wrap-anywhere">
+        {name}
+      </span>
+    </button>
   );
 }
 
@@ -116,6 +156,7 @@ interface FileItemProps {
 
 function FileItem({ item, onNavigate }: FileItemProps) {
   const icon = useMemo(() => getFileIcon(item), [item]);
+
   const handleClick = () => {
     if (item.handle.kind === "directory") {
       onNavigate(item.handle);
@@ -123,45 +164,97 @@ function FileItem({ item, onNavigate }: FileItemProps) {
   };
 
   return (
-    <button
+    <FileItemBase
+      icon={icon}
+      name={item.handle.name}
       onClick={handleClick}
-      className={cn(
-        "flex w-18 flex-col items-center gap-2 rounded p-1 transition-colors hover:bg-accent hover:text-accent-foreground",
-        { "cursor-pointer": item.handle.kind === "directory" }
-      )}
-      ref={info(
-        item.handle.name,
-        item.handle.kind === "directory"
-          ? "Click to navigate to this directory"
-          : `${capitalize(item.type)} file\n\nSize: ${formatFileSize(item.file?.size)}\n\nLast modified: ${formatFileDate(item.file?.lastModified)}`
-      )}
-    >
-      {icon}
-      <span className="line-clamp-3 text-center text-xs leading-tight wrap-anywhere">
-        {item.handle.name}
-      </span>
-    </button>
+      ref={info(item.handle.name, getFileInfo(item))}
+      className={cn({ "cursor-pointer": item.handle.kind === "directory" })}
+    />
   );
 }
 
-function getFileIcon(item: FileSystemItem) {
-  if (item.handle.kind === "directory") {
-    return <Folder className="size-8 text-primary" />;
-  }
-  switch (item.type) {
-    case "image":
-      return <FileImage className="size-8 text-rose-600 dark:text-rose-400" />;
-    case "video":
-      return (
-        <FileVideo className="size-8 text-purple-600 dark:text-purple-400" />
-      );
-    case "audio":
-      return (
-        <FileAudio className="size-8 text-fuchsia-600 dark:text-fuchsia-400" />
-      );
-    case "text":
-      return <FileText className="size-8 text-slate-600 dark:text-slate-400" />;
-    default:
-      return <File className="size-8 text-stone-600 dark:text-stone-400" />;
-  }
+// ImageFileItem
+
+interface ImageFileItemProps {
+  item: FileSystemItem;
+}
+
+function ImageFileItem({ item }: ImageFileItemProps) {
+  const icon = useMemo(() => getFileIcon(item), [item]);
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
+  const elementRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!elementRef.current) return;
+    let visible = false;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting || visible) return;
+        visible = true;
+
+        const img = new Image();
+        const url = URL.createObjectURL(item.file!);
+
+        img.onload = async () => {
+          const canvas = new OffscreenCanvas(32, 32);
+          const ctx = canvas.getContext("2d");
+
+          if (!ctx) {
+            URL.revokeObjectURL(url);
+            return;
+          }
+
+          const scale = Math.min(32 / img.width, 32 / img.height);
+          const scaledWidth = img.width * scale;
+          const scaledHeight = img.height * scale;
+
+          const x = (32 - scaledWidth) / 2;
+          const y = (32 - scaledHeight) / 2;
+
+          ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+          URL.revokeObjectURL(url);
+
+          const blob = await canvas.convertToBlob({
+            type: "image/jpeg",
+            quality: 0.8
+          });
+          const thumbnail = URL.createObjectURL(blob);
+          setThumbnail(thumbnail);
+        };
+
+        img.src = url;
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(elementRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(
+    () => () => {
+      thumbnail && URL.revokeObjectURL(thumbnail);
+    },
+    [thumbnail]
+  );
+
+  return (
+    <FileItemBase
+      ref={mergeRefs(elementRef, info(item.handle.name, getFileInfo(item)))}
+      name={item.handle.name}
+      icon={
+        !thumbnail ? (
+          icon
+        ) : (
+          <img
+            src={thumbnail}
+            alt={item.handle.name}
+            className="size-8 rounded object-cover"
+          />
+        )
+      }
+    />
+  );
 }
