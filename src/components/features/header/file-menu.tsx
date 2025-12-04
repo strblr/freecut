@@ -1,5 +1,5 @@
 import { useLiveQuery } from "dexie-react-hooks";
-import { isEmpty, pick } from "lodash-es";
+import { isEmpty } from "lodash-es";
 import {
   Badge,
   DropdownMenu,
@@ -12,63 +12,17 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger
 } from "@/components";
-import { db, useStore, type RecentProject } from "@/config";
+import { db, useStore } from "@/config";
+import {
+  clearRecentProjects,
+  openProjectFromComputer,
+  openProjectFromRecent
+} from "@/utils";
 
 export function FileMenu() {
-  const hasCurrentProject = useStore(store => !!store.currentProject);
-
   const recentProjects = useLiveQuery(() =>
     db.recentProjects.orderBy("updatedAt").reverse().toArray()
   );
-
-  const handleOpenFromComputer = async () => {
-    const handle = await window.showDirectoryPicker({
-      mode: "readwrite"
-    });
-    const project = { handle, computer: true };
-    await db.transaction("rw", db.recentProjects, async () => {
-      const existing = await db.recentProjects
-        .where({ name: handle.name })
-        .and(project => project.computer === true)
-        .first();
-      const updatedAt = Date.now();
-      if (existing) {
-        await db.recentProjects.update(existing.id, { ...project, updatedAt });
-      } else {
-        await db.recentProjects.add({
-          name: handle.name,
-          ...project,
-          updatedAt
-        });
-      }
-      const all = await db.recentProjects
-        .orderBy("updatedAt")
-        .reverse()
-        .toArray();
-      if (all.length > 10) {
-        await db.recentProjects.bulkDelete(
-          all.slice(10).map(project => project.id)
-        );
-      }
-    });
-    useStore.getState().setCurrentProject(project);
-  };
-
-  const handleOpenFromRecent = async (project: RecentProject) => {
-    const permission = await project.handle.requestPermission({
-      mode: "readwrite"
-    });
-    if (permission === "granted") {
-      await db.recentProjects.update(project.id, { updatedAt: Date.now() });
-      useStore
-        .getState()
-        .setCurrentProject(pick(project, ["handle", "computer"]));
-    }
-  };
-
-  const handleClearRecent = async () => {
-    await db.recentProjects.clear();
-  };
 
   return (
     <DropdownMenu>
@@ -80,7 +34,7 @@ export function FileMenu() {
           Open
           <DropdownMenuShortcut>Ctrl+O</DropdownMenuShortcut>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleOpenFromComputer}>
+        <DropdownMenuItem onClick={openProjectFromComputer}>
           Open from computer
           <DropdownMenuShortcut>Ctrl+M Ctrl+O</DropdownMenuShortcut>
         </DropdownMenuItem>
@@ -93,7 +47,7 @@ export function FileMenu() {
               recentProjects.map(project => (
                 <DropdownMenuItem
                   key={project.id}
-                  onClick={() => handleOpenFromRecent(project)}
+                  onClick={() => openProjectFromRecent(project)}
                 >
                   {project.handle.name}
                   {project.computer && (
@@ -105,7 +59,7 @@ export function FileMenu() {
               ))
             )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleClearRecent}>
+            <DropdownMenuItem onClick={clearRecentProjects}>
               Clear recent
             </DropdownMenuItem>
           </DropdownMenuSubContent>
@@ -116,10 +70,7 @@ export function FileMenu() {
           <DropdownMenuShortcut>Ctrl+S</DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          disabled={!hasCurrentProject}
-          onClick={useStore.getState().closeCurrentProject}
-        >
+        <DropdownMenuItem onClick={useStore.getState().closeCurrentProject}>
           Close project
           <DropdownMenuShortcut>Ctrl+M F</DropdownMenuShortcut>
         </DropdownMenuItem>

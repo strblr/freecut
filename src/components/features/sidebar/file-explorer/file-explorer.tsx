@@ -5,16 +5,13 @@ import {
   FileExplorerContent,
   ScrollArea
 } from "@/components";
-import type { CurrentProject } from "@/config";
+import { useProject } from "@/hooks";
 import type { FilterDirectoryOptions } from "@/utils";
 
-interface FileExplorerProps {
-  currentProject: CurrentProject;
-}
-
-export function FileExplorer({ currentProject }: FileExplorerProps) {
+export function FileExplorer() {
+  const { project } = useProject();
   const [stack, setStack] = useState<FileSystemDirectoryHandle[]>([
-    currentProject.handle
+    project.handle
   ]);
 
   const [filters, setFilters] = useState<FilterDirectoryOptions>({

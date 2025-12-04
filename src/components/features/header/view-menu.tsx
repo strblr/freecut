@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
   i
 } from "@/components";
-import { useStore } from "@/config";
+import { useStore, type Store } from "@/config";
 
 export interface ViewMenuProps {
   onLayoutReset: () => void;
@@ -23,7 +23,7 @@ export function ViewMenu({ onLayoutReset }: ViewMenuProps) {
   const showInfoView = useStore(store => store.showInfoView);
 
   const handleThemeChange = (theme: string) => {
-    useStore.getState().setTheme(theme as "light" | "dark" | "system");
+    useStore.getState().setTheme(theme as Store["theme"]);
   };
 
   return (

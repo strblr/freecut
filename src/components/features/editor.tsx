@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { flushSync } from "react-dom";
 import type { ImperativePanelGroupHandle } from "react-resizable-panels";
-import weakKey from "weak-key";
+import { useStore } from "@/config";
 import {
   Card,
   Header,
@@ -12,10 +12,8 @@ import {
   Sidebar
 } from "@/components";
 import { useEventCallback } from "@/hooks";
-import { useStore } from "@/config";
 
-export function Layout() {
-  const currentProject = useStore(store => store.currentProject);
+export function Editor() {
   const showInfoView = useStore(store => store.showInfoView);
   const mainLayoutRef = useRef<ImperativePanelGroupHandle>(null);
   const topLayoutRef = useRef<ImperativePanelGroupHandle>(null);
@@ -29,12 +27,9 @@ export function Layout() {
   });
 
   return (
-    <>
+    <div className="grid h-screen grid-rows-[auto_1fr] gap-2 p-2">
       <Header onLayoutReset={handleLayoutReset} />
-      <Card
-        key={currentProject ? weakKey(currentProject) : null}
-        className="overflow-hidden p-0"
-      >
+      <Card className="overflow-hidden p-0">
         <ResizablePanelGroup
           ref={mainLayoutRef}
           direction="vertical"
@@ -97,6 +92,6 @@ export function Layout() {
           </ResizablePanel>
         </ResizablePanelGroup>
       </Card>
-    </>
+    </div>
   );
 }

@@ -10,18 +10,19 @@ import {
   ViewMenu
 } from "@/components";
 import { useStore } from "@/config";
+import { useProject } from "@/hooks";
 
 export interface HeaderProps {
   onLayoutReset: () => void;
 }
 
 export function Header({ onLayoutReset }: HeaderProps) {
-  const currentProject = useStore(store => store.currentProject);
+  const { project } = useProject();
 
   return (
     <header className="flex items-center gap-4">
       <div className="flex items-center gap-2">
-        <img src="/logo.png" alt="logo" className="size-6" />
+        <img src="/logo.svg" alt="logo" className="size-6" />
         <h1 className="text-lg font-bold">FreeCut</h1>
       </div>
       <div className="flex items-center gap-1">
@@ -30,20 +31,16 @@ export function Header({ onLayoutReset }: HeaderProps) {
         <ViewMenu onLayoutReset={onLayoutReset} />
         <HelpMenu />
       </div>
-      {currentProject && (
-        <>
-          <Separator orientation="vertical" className="h-4!" />
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <FolderIcon className="size-4" />
-            <span>{currentProject.handle.name}</span>
-            {currentProject.computer && (
-              <Badge variant="outline" className="ml-auto">
-                Computer
-              </Badge>
-            )}
-          </div>
-        </>
-      )}
+      <Separator orientation="vertical" className="h-4!" />
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <FolderIcon className="size-4" />
+        <span>{project.handle.name}</span>
+        {project.computer && (
+          <Badge variant="outline" className="ml-auto">
+            Computer
+          </Badge>
+        )}
+      </div>
       <div className="ml-auto flex items-center gap-1">
         <Button
           variant="ghost"

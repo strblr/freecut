@@ -6,32 +6,14 @@ import {
   SparklesIcon
 } from "lucide-react";
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
   FileExplorer,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger
 } from "@/components";
-import { useStore } from "@/config";
 
 export function Sidebar() {
-  const currentProject = useStore(store => store.currentProject);
-
-  if (!currentProject) {
-    return (
-      <Empty className="h-full">
-        <EmptyHeader>
-          <EmptyTitle>No project selected</EmptyTitle>
-          <EmptyDescription>Open or create a project</EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    );
-  }
-
   return (
     <Tabs defaultValue="files" className="h-full gap-0">
       <TabsList className="h-auto bg-transparent p-2">
@@ -52,7 +34,7 @@ export function Sidebar() {
         </TabsTrigger>
       </TabsList>
       <TabsContent value="files" className="flex min-h-0 flex-col">
-        <FileExplorer currentProject={currentProject} />
+        <FileExplorer />
       </TabsContent>
       <TabsContent value="shared"></TabsContent>
       <TabsContent value="effects"></TabsContent>
