@@ -1,4 +1,5 @@
 import {
+  CaptionsIcon,
   FileAudioIcon,
   FileIcon,
   FileImageIcon,
@@ -7,60 +8,107 @@ import {
   FolderIcon
 } from "lucide-react";
 import prettyBytes from "pretty-bytes";
-import { capitalize, sortBy } from "lodash-es";
-import { dayjs } from "@/utils";
+import { sortBy } from "lodash-es";
+import { dayjs, toSearchPattern } from "@/utils";
 
-export interface FileSystemItem {
-  handle: FileSystemDirectoryHandle | FileSystemFileHandle;
-  type?: ReturnType<typeof getFileType>;
-  file?: File;
-}
+export type FileExplorerItem = FileExplorerDirectory | FileExplorerFile;
 
-export async function readDirectoryItems(directory: FileSystemDirectoryHandle) {
-  const items = await Array.fromAsync(
+export type FileExplorerDirectory = {
+  kind: "directory";
+  name: string;
+  handle: FileSystemDirectoryHandle;
+};
+
+export type FileExplorerFile = {
+  kind: "file";
+  name: string;
+  type: ReturnType<typeof getFileType>;
+  file: File;
+  handle: FileSystemFileHandle;
+};
+
+// readDirectory
+
+export function readDirectory(directory: FileSystemDirectoryHandle) {
+  return Array.fromAsync(
     directory.values(),
-    async (handle): Promise<FileSystemItem> => {
+    async (handle): Promise<FileExplorerItem> => {
       if (handle.kind === "directory") {
-        return { handle };
+        return { kind: "directory", name: handle.name, handle };
       } else {
         return {
-          handle,
+          kind: "file",
+          name: handle.name,
           type: getFileType(handle.name),
-          file: await handle.getFile()
+          file: await handle.getFile(),
+          handle
         };
       }
     }
   );
-  return sortBy(
-    items,
-    item => item.handle.kind,
-    item => item.handle.name
-  );
 }
 
-export function formatFileSize(item: FileSystemItem) {
-  return prettyBytes(item.file?.size ?? 0);
+// filterDirectory
+
+export interface FilterDirectoryOptions {
+  search: string;
+  sort: "name" | "type" | "size" | "date";
+  descending: boolean;
 }
 
-export function formatFileDate(item: FileSystemItem) {
-  return dayjs(item.file?.lastModified ?? 0).fromNow();
-}
-
-export function getFileInfo(item: FileSystemItem): string {
-  if (item.handle.kind === "directory") {
-    return "Click to navigate to this directory";
+export function filterDirectory(
+  items: FileExplorerItem[],
+  { search, sort, descending }: FilterDirectoryOptions
+) {
+  if (search?.trim()) {
+    const pattern = toSearchPattern(search);
+    items = items.filter(item => pattern.test(item.name));
   }
-  return `${capitalize(item.type)} file\n\nSize: ${formatFileSize(item)}\n\nLast modified: ${formatFileDate(item)}`;
+
+  const fileSorter: (item: FileExplorerFile) => unknown =
+    sort === "name"
+      ? item => item.name
+      : sort === "type"
+        ? item => item.type
+        : sort === "size"
+          ? item => item.file.size
+          : item => item.file.lastModified;
+
+  items = sortBy(
+    items,
+    item => (item.kind === "directory" ? 0 : 1),
+    item => (item.kind === "directory" ? item.name : fileSorter(item))
+  );
+
+  if (descending) {
+    items = [...items].reverse();
+  }
+
+  return items;
 }
 
-export function getFileIcon(item: FileSystemItem) {
-  if (item.handle.kind === "directory") {
+// Other
+
+export function formatFileSize(item: FileExplorerFile) {
+  return prettyBytes(item.file.size);
+}
+
+export function formatFileDate(item: FileExplorerFile) {
+  return dayjs(item.file.lastModified).fromNow();
+}
+
+export function getFileIcon(item: FileExplorerItem) {
+  if (item.kind === "directory") {
     return <FolderIcon className="size-8 text-primary" />;
   }
   switch (item.type) {
     case "image":
       return (
         <FileImageIcon className="size-8 text-rose-600 dark:text-rose-400" />
+      );
+    case "subtitle":
+      return (
+        <CaptionsIcon className="size-8 text-blue-600 dark:text-blue-400" />
       );
     case "video":
       return (
@@ -84,6 +132,9 @@ function getFileType(filename: string) {
   if (imageExtensions.includes(extension)) {
     return "image";
   }
+  if (subtitleExtensions.includes(extension)) {
+    return "subtitle";
+  }
   if (videoExtensions.includes(extension)) {
     return "video";
   }
@@ -97,6 +148,16 @@ function getFileType(filename: string) {
 }
 
 const imageExtensions = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"];
+const subtitleExtensions = [
+  "srt",
+  "sbv",
+  "sub",
+  "vtt",
+  "ass",
+  "ssa",
+  "smi",
+  "ttml"
+];
 const audioExtensions = ["mp3", "wav", "ogg", "aac", "flac", "m4a"];
 const videoExtensions = [
   "mp4",

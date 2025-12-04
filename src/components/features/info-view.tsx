@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Markdown from "react-markdown";
+import hash from "@emotion/hash";
 import { XIcon } from "lucide-react";
 import { throttle } from "lodash-es";
 import { Button } from "@/components";
@@ -11,12 +12,14 @@ interface InfoData {
   description: string;
 }
 
-const infoMap = new WeakMap<object, InfoData>();
+const infoMap = new Map<string, InfoData>();
 
-export function info<E extends Element>(title: string, description: string) {
-  return (node: E | null) => {
-    node && infoMap.set(node, { title, description });
-  };
+export function i(title: string, description: string) {
+  const key = hash(`${title}-${description}`);
+  if (!infoMap.has(key)) {
+    infoMap.set(key, { title, description });
+  }
+  return key;
 }
 
 export function InfoView() {
@@ -29,18 +32,13 @@ export function InfoView() {
   useEffect(() => {
     const listener = throttle(
       raf((event: PointerEvent) => {
-        for (
-          let node = event.target as Element | null;
-          node;
-          node = node.parentElement
-        ) {
-          const data = infoMap.get(node);
-          if (data) {
-            setData(data);
-            return;
-          }
+        const element = (event.target as Element).closest("[data-info]");
+        const key = element?.getAttribute("data-info");
+        if (key && infoMap.has(key)) {
+          setData(infoMap.get(key)!);
+        } else {
+          setData(null);
         }
-        setData(null);
       }),
       200
     );
@@ -54,7 +52,7 @@ export function InfoView() {
   return (
     <div
       className="h-full"
-      ref={info(
+      data-info={i(
         "Info view",
         "The info view is a feature that displays a short description of the feature that is currently being hovered over. It is a useful tool to find your way around the app."
       )}

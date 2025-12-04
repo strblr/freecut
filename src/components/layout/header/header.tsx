@@ -1,11 +1,11 @@
-import { FolderIcon, InfoIcon, PanelLeftCloseIcon } from "lucide-react";
+import { FolderIcon, HandHeartIcon, InfoIcon } from "lucide-react";
 import {
   Badge,
   Button,
   EditMenu,
   FileMenu,
   HelpMenu,
-  info,
+  i,
   Separator,
   ViewMenu
 } from "@/components";
@@ -45,15 +45,23 @@ export function Header({ onLayoutReset }: HeaderProps) {
         </>
       )}
       <div className="ml-auto flex items-center gap-1">
-        <Button variant="ghost" size="icon-sm">
-          <PanelLeftCloseIcon className="size-4" />
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Support FreeCut"
+          data-info={i(
+            "Support FreeCut",
+            "Support the project to help us continue development."
+          )}
+        >
+          <HandHeartIcon className="size-4 text-primary" />
         </Button>
         <Button
           variant="ghost"
           size="icon-sm"
           onClick={() => useStore.getState().toggleShowInfoView()}
           aria-label="Toggle info view"
-          ref={info(
+          data-info={i(
             "Toggle info view",
             "Toggle this info view on and off. Hide it if you need space, or show it if you want to learn more about a feature."
           )}

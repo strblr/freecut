@@ -16,18 +16,23 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
   Button,
-  info
+  i
 } from "@/components";
 import { queryClient } from "@/config";
+import type { FilterDirectoryOptions } from "@/utils";
 
 interface FileExplorerHeaderProps {
   stack: FileSystemDirectoryHandle[];
+  filters: FilterDirectoryOptions;
   onNavigate: (index: number) => void;
+  onFiltersChange: (options: FilterDirectoryOptions) => void;
 }
 
 export function FileExplorerHeader({
   stack,
-  onNavigate
+  filters,
+  onNavigate,
+  onFiltersChange
 }: FileExplorerHeaderProps) {
   const handleNavigateBack = () => {
     onNavigate(Math.max(stack.length - 2, 0));
@@ -72,7 +77,7 @@ export function FileExplorerHeader({
         disabled={stack.length <= 1}
         onClick={handleNavigateBack}
         aria-label="Navigate back"
-        ref={info("Navigate back", "Navigate back to the parent directory.")}
+        data-info={i("Navigate back", "Navigate back to the parent directory.")}
       >
         <ArrowLeftIcon className="size-4" />
       </Button>
@@ -89,7 +94,7 @@ export function FileExplorerHeader({
                     asChild
                     onClick={() => onNavigate(0)}
                     aria-label="Navigate to root directory"
-                    ref={info(
+                    data-info={i(
                       "Navigate to root directory",
                       "Navigate to the root directory."
                     )}
@@ -122,7 +127,10 @@ export function FileExplorerHeader({
         className="ml-auto"
         onClick={handleAddFolder}
         aria-label="Add folder"
-        ref={info("Add folder", "Add a new folder to the current directory.")}
+        data-info={i(
+          "Add folder",
+          "Add a new folder to the current directory."
+        )}
       >
         <FolderPlusIcon className="size-4" />
       </Button>
@@ -130,7 +138,7 @@ export function FileExplorerHeader({
         size="icon-xs"
         variant="ghost"
         aria-label="Sort files"
-        ref={info(
+        data-info={i(
           "Sort files",
           "Sort the file list by name, size, type, or date."
         )}
@@ -141,7 +149,7 @@ export function FileExplorerHeader({
         size="icon-xs"
         variant="ghost"
         aria-label="Search files"
-        ref={info(
+        data-info={i(
           "Search files",
           "Search the file list by keywords or patterns."
         )}

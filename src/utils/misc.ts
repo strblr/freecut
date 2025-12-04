@@ -17,3 +17,12 @@ export function raf<A extends any[]>(cb: (...args: A) => any) {
     });
   };
 }
+
+export function toSearchPattern(str: string) {
+  const pattern = str
+    .trim()
+    .replace(/[|\\{}()[\]^$+?.]/g, "\\$&")
+    .replace(/-/g, "\\x2d")
+    .replace(/\*/g, ".*");
+  return new RegExp(`^${pattern}$`, "i");
+}

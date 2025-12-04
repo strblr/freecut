@@ -5,12 +5,12 @@ import {
   useRef,
   type HTMLAttributes,
   type Ref,
-  type ReactNode
+  type ReactNode,
+  useDeferredValue
 } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, FolderOpenIcon } from "lucide-react";
 import { isEmpty, last } from "lodash-es";
-import mergeRefs from "merge-refs";
 import {
   Button,
   Empty,
@@ -19,38 +19,49 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-  info,
+  i,
   Skeleton
 } from "@/components";
 import {
   cn,
+  filterDirectory,
   getFileIcon,
-  getFileInfo,
-  readDirectoryItems,
-  type FileSystemItem
+  readDirectory,
+  type FileExplorerDirectory,
+  type FileExplorerFile,
+  type FileExplorerItem,
+  type FilterDirectoryOptions
 } from "@/utils";
 
 interface FileExplorerContentProps {
   stack: FileSystemDirectoryHandle[];
+  filters: FilterDirectoryOptions;
   onNavigate: (dir: FileSystemDirectoryHandle) => void;
 }
 
 export function FileExplorerContent({
   stack,
+  filters,
   onNavigate
 }: FileExplorerContentProps) {
   const directory = last(stack);
   const path = useMemo(() => stack.map(dir => dir.name), [stack]);
   const {
-    data: items = [],
+    data = [],
     isLoading,
     error,
     refetch
   } = useQuery({
-    queryKey: ["directory-items", path],
-    queryFn: () => readDirectoryItems(directory!),
+    queryKey: ["read-directory", path],
+    queryFn: () => readDirectory(directory!),
     enabled: !!directory
   });
+
+  const deferredFilters = useDeferredValue(filters);
+  const items = useMemo(
+    () => filterDirectory(data, deferredFilters),
+    [data, deferredFilters]
+  );
 
   if (isLoading) {
     return (
@@ -101,75 +112,64 @@ export function FileExplorerContent({
   return (
     <div className="flex flex-wrap items-start gap-1">
       {items.map(item =>
-        item.type === "image" ? (
-          <ImageFileItem key={item.handle.name} item={item} />
+        item.kind === "directory" ? (
+          <DirectoryItem key={item.name} item={item} onNavigate={onNavigate} />
+        ) : item.type === "image" ? (
+          <ImageFileItem key={item.name} item={item} />
         ) : (
-          <FileItem
-            key={item.handle.name}
-            item={item}
-            onNavigate={onNavigate}
-          />
+          <FileItem key={item.name} item={item} />
         )
       )}
     </div>
   );
 }
 
-// FileItemBase
+// FileItem
 
-interface FileItemBaseProps extends HTMLAttributes<HTMLButtonElement> {
+interface FileItemProps extends HTMLAttributes<HTMLButtonElement> {
   ref?: Ref<HTMLButtonElement>;
-  icon: ReactNode;
-  name: ReactNode;
+  item: FileExplorerItem;
+  icon?: ReactNode;
 }
 
-function FileItemBase({
-  ref,
-  icon,
-  name,
-  className,
-  ...props
-}: FileItemBaseProps) {
+function FileItem({ ref, item, icon, className, ...props }: FileItemProps) {
+  const defaultIcon = useMemo(() => getFileIcon(item), [item]);
   return (
     <button
       ref={ref}
+      data-info={i("File", "Click to select this file.")}
       {...props}
       className={cn(
         "flex w-18 flex-col items-center gap-2 rounded p-1 transition-colors hover:bg-accent hover:text-accent-foreground",
         className
       )}
     >
-      {icon}
+      {icon ?? defaultIcon}
       <span className="line-clamp-3 text-center text-xs leading-tight wrap-anywhere">
-        {name}
+        {item.name}
       </span>
     </button>
   );
 }
 
-// FileItem
+// DirectoryItem
 
-interface FileItemProps {
-  item: FileSystemItem;
+interface DirectoryItemProps {
+  item: FileExplorerDirectory;
   onNavigate: (dir: FileSystemDirectoryHandle) => void;
 }
 
-function FileItem({ item, onNavigate }: FileItemProps) {
-  const icon = useMemo(() => getFileIcon(item), [item]);
-
+function DirectoryItem({ item, onNavigate }: DirectoryItemProps) {
   const handleClick = () => {
-    if (item.handle.kind === "directory") {
-      onNavigate(item.handle);
-    }
+    onNavigate(item.handle);
   };
 
   return (
-    <FileItemBase
-      icon={icon}
-      name={item.handle.name}
+    <FileItem
+      item={item}
       onClick={handleClick}
-      ref={info(item.handle.name, getFileInfo(item))}
-      className={cn({ "cursor-pointer": item.handle.kind === "directory" })}
+      className="cursor-pointer"
+      data-info={i("Directory", "Click to navigate to this directory.")}
     />
   );
 }
@@ -177,51 +177,53 @@ function FileItem({ item, onNavigate }: FileItemProps) {
 // ImageFileItem
 
 interface ImageFileItemProps {
-  item: FileSystemItem;
+  item: FileExplorerFile;
 }
 
 function ImageFileItem({ item }: ImageFileItemProps) {
-  const icon = useMemo(() => getFileIcon(item), [item]);
+  const ref = useRef<HTMLButtonElement>(null);
   const [thumbnail, setThumbnail] = useState<string | null>(null);
-  const elementRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (!elementRef.current) return;
+    if (!ref.current) return;
     let visible = false;
+    let active = true;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry?.isIntersecting || visible) return;
+        if (!entry?.isIntersecting || visible || !active) return;
         visible = true;
-
         const img = new Image();
-        const url = URL.createObjectURL(item.file!);
+        const url = URL.createObjectURL(item.file);
 
         img.onload = async () => {
-          const canvas = new OffscreenCanvas(32, 32);
-          const ctx = canvas.getContext("2d");
+          try {
+            const canvas = new OffscreenCanvas(32, 32);
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return;
 
-          if (!ctx) {
+            const scale = Math.min(32 / img.width, 32 / img.height);
+            const scaledWidth = img.width * scale;
+            const scaledHeight = img.height * scale;
+
+            const x = (32 - scaledWidth) / 2;
+            const y = (32 - scaledHeight) / 2;
+
+            ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+            const blob = await canvas.convertToBlob({
+              type: "image/jpeg",
+              quality: 0.8
+            });
+            if (!active) return;
+            const thumbnail = URL.createObjectURL(blob);
+            setThumbnail(thumbnail);
+          } finally {
             URL.revokeObjectURL(url);
-            return;
           }
+        };
 
-          const scale = Math.min(32 / img.width, 32 / img.height);
-          const scaledWidth = img.width * scale;
-          const scaledHeight = img.height * scale;
-
-          const x = (32 - scaledWidth) / 2;
-          const y = (32 - scaledHeight) / 2;
-
-          ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+        img.onerror = () => {
           URL.revokeObjectURL(url);
-
-          const blob = await canvas.convertToBlob({
-            type: "image/jpeg",
-            quality: 0.8
-          });
-          const thumbnail = URL.createObjectURL(blob);
-          setThumbnail(thumbnail);
         };
 
         img.src = url;
@@ -229,8 +231,11 @@ function ImageFileItem({ item }: ImageFileItemProps) {
       { threshold: 0.1 }
     );
 
-    observer.observe(elementRef.current);
-    return () => observer.disconnect();
+    observer.observe(ref.current);
+    return () => {
+      active = false;
+      observer.disconnect();
+    };
   }, []);
 
   useEffect(
@@ -241,16 +246,14 @@ function ImageFileItem({ item }: ImageFileItemProps) {
   );
 
   return (
-    <FileItemBase
-      ref={mergeRefs(elementRef, info(item.handle.name, getFileInfo(item)))}
-      name={item.handle.name}
+    <FileItem
+      ref={ref}
+      item={item}
       icon={
-        !thumbnail ? (
-          icon
-        ) : (
+        !thumbnail ? undefined : (
           <img
             src={thumbnail}
-            alt={item.handle.name}
+            alt={item.name}
             className="size-8 rounded object-cover"
           />
         )

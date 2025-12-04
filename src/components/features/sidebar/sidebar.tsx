@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
   ArrowLeftRightIcon,
   FilesIcon,
@@ -6,7 +5,6 @@ import {
   SettingsIcon,
   SparklesIcon
 } from "lucide-react";
-import { isNumber, take } from "lodash-es";
 import {
   Empty,
   EmptyDescription,
@@ -21,21 +19,7 @@ import {
 import { useStore } from "@/config";
 
 export function Sidebar() {
-  const { currentProject } = useStore();
-  const [stack, setStack] = useState<FileSystemDirectoryHandle[]>([]);
-
-  useEffect(
-    () => setStack(currentProject ? [currentProject.handle] : []),
-    [currentProject]
-  );
-
-  const handleNavigate = async (dir: FileSystemDirectoryHandle | number) => {
-    if (isNumber(dir)) {
-      setStack(take(stack, dir + 1));
-    } else {
-      setStack([...stack, dir]);
-    }
-  };
+  const currentProject = useStore(store => store.currentProject);
 
   if (!currentProject) {
     return (
@@ -68,7 +52,7 @@ export function Sidebar() {
         </TabsTrigger>
       </TabsList>
       <TabsContent value="files" className="flex min-h-0 flex-col">
-        <FileExplorer stack={stack} onNavigate={handleNavigate} />
+        <FileExplorer currentProject={currentProject} />
       </TabsContent>
       <TabsContent value="shared"></TabsContent>
       <TabsContent value="effects"></TabsContent>
