@@ -1,5 +1,5 @@
-import { times } from "lodash-es";
 import { useEffect, useRef } from "react";
+import { clamp, times } from "lodash-es";
 
 export function OldProjectorBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -7,18 +7,18 @@ export function OldProjectorBackground() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d")!;
     if (!ctx) return;
 
     let animationId: number;
+    let lastTimestamp = 0;
+    let delta = 0;
     let width = window.innerWidth;
     let height = window.innerHeight;
     let flickerIntensity = 0.15;
     const minFlickerIntensity = 0.08;
-    const particles: Particle[] = [];
     const particleCount = Math.floor((width * height) / 30000);
-
-    type Particle = ReturnType<typeof createParticle>;
+    const particles = times(particleCount, createParticle);
 
     const resizeCanvas = () => {
       const ratio = window.devicePixelRatio || 1;
@@ -28,10 +28,6 @@ export function OldProjectorBackground() {
       canvas.height = height * ratio;
       ctx.scale(ratio, ratio);
     };
-
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
-    times(particleCount, () => particles.push(createParticle()));
 
     function createParticle() {
       return {
@@ -46,39 +42,53 @@ export function OldProjectorBackground() {
       };
     }
 
-    function updateParticle(particle: Particle) {
-      particle.x += particle.vx;
-      particle.y += particle.vy;
-      particle.angle += particle.angularVelocity;
+    function updateParticles() {
+      for (const particle of particles) {
+        particle.x += particle.vx * delta;
+        particle.y += particle.vy * delta;
+        particle.angle += particle.angularVelocity * delta;
 
-      if (particle.x < 0) particle.x = width;
-      if (particle.x > width) particle.x = 0;
-      if (particle.y < 0) particle.y = height;
-      if (particle.y > height) particle.y = 0;
+        if (particle.x < 0) particle.x = width;
+        if (particle.x > width) particle.x = 0;
+        if (particle.y < 0) particle.y = height;
+        if (particle.y > height) particle.y = 0;
 
-      particle.opacity +=
-        Math.sin(Date.now() * 0.001 + particle.x * 0.01) * 0.002;
-      particle.opacity = Math.max(0.05, Math.min(0.4, particle.opacity));
+        particle.opacity +=
+          Math.sin(lastTimestamp * 0.001 + particle.x * 0.01) * 0.002;
+        particle.opacity = clamp(particle.opacity, 0.05, 0.4);
+      }
     }
 
-    function drawParticle(ctx: CanvasRenderingContext2D, particle: Particle) {
-      ctx.save();
-      ctx.translate(particle.x, particle.y);
-      ctx.rotate(particle.angle);
-      ctx.globalAlpha = particle.opacity;
+    function drawParticles() {
+      for (const particle of particles) {
+        ctx.save();
+        ctx.translate(particle.x, particle.y);
+        ctx.rotate(particle.angle);
+        ctx.globalAlpha = particle.opacity;
 
-      const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, particle.size);
-      gradient.addColorStop(0, "rgba(255, 255, 255, 0.6)");
-      gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, particle.size);
+        gradient.addColorStop(0, "rgba(255, 255, 255, 0.6)");
+        gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
 
-      ctx.fillStyle = gradient;
-      ctx.beginPath();
-      ctx.arc(0, 0, particle.size, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(0, 0, particle.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
     }
 
-    function drawFlicker(ctx: CanvasRenderingContext2D) {
+    function updateFlicker() {
+      if (Math.random() < 1 - 0.99 ** delta) {
+        flickerIntensity = 0.1 + Math.random() * 0.15;
+      } else {
+        flickerIntensity *= 0.99 ** delta;
+        if (flickerIntensity < minFlickerIntensity)
+          flickerIntensity = minFlickerIntensity;
+      }
+    }
+
+    function drawFlicker() {
       ctx.save();
       ctx.globalCompositeOperation = "screen";
 
@@ -104,22 +114,11 @@ export function OldProjectorBackground() {
 
       ctx.fillStyle = beamGradient;
       ctx.fillRect(0, 0, width, height);
-
       ctx.restore();
     }
 
-    function updateFlicker() {
-      if (Math.random() < 0.01) {
-        flickerIntensity = 0.1 + Math.random() * 0.15;
-      } else {
-        flickerIntensity *= 0.99;
-        if (flickerIntensity < minFlickerIntensity)
-          flickerIntensity = minFlickerIntensity;
-      }
-    }
-
-    function drawScanLines(ctx: CanvasRenderingContext2D) {
-      if (Math.random() < 0.01) {
+    function drawScanLines() {
+      if (Math.random() < 1 - 0.99 ** delta) {
         ctx.save();
         ctx.globalCompositeOperation = "screen";
         ctx.globalAlpha = 0.25;
@@ -134,19 +133,21 @@ export function OldProjectorBackground() {
       }
     }
 
-    const animate = (_timestamp?: number) => {
+    const render = (timestamp = 0) => {
+      delta = (timestamp - lastTimestamp) / (1000 / 144);
+      lastTimestamp = timestamp;
       ctx.clearRect(0, 0, width, height);
-      particles.forEach(particle => {
-        updateParticle(particle);
-        drawParticle(ctx, particle);
-      });
+      updateParticles();
+      drawParticles();
       updateFlicker();
-      drawFlicker(ctx);
-      drawScanLines(ctx);
-      animationId = requestAnimationFrame(animate);
+      drawFlicker();
+      drawScanLines();
+      animationId = requestAnimationFrame(render);
     };
 
-    animate();
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+    render();
 
     return () => {
       window.removeEventListener("resize", resizeCanvas);
@@ -158,8 +159,7 @@ export function OldProjectorBackground() {
     <>
       <canvas
         ref={canvasRef}
-        className="pointer-events-none absolute inset-0"
-        style={{ width: "100%", height: "100%" }}
+        className="pointer-events-none absolute inset-0 size-full"
       />
       <div className="pointer-events-none fixed inset-0 bg-[url('/grain.gif')] bg-size-[512px_512px] bg-repeat opacity-[0.025]" />
     </>
