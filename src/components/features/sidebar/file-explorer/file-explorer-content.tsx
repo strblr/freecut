@@ -30,12 +30,12 @@ import {
   type FileExplorerDirectory,
   type FileExplorerFile,
   type FileExplorerItem,
-  type FilterDirectoryOptions
+  type FileExplorerFilters
 } from "@/utils";
 
 interface FileExplorerContentProps {
   stack: FileSystemDirectoryHandle[];
-  filters: FilterDirectoryOptions;
+  filters: FileExplorerFilters;
   onNavigate: (dir: FileSystemDirectoryHandle) => void;
 }
 

@@ -4,6 +4,7 @@ export * from "./button";
 export * from "./card";
 export * from "./dropdown-menu";
 export * from "./empty";
+export * from "./input";
 export * from "./resizable";
 export * from "./separator";
 export * from "./scroll-area";

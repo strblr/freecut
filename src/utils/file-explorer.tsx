@@ -8,7 +8,7 @@ import {
   FolderIcon
 } from "lucide-react";
 import prettyBytes from "pretty-bytes";
-import { sortBy } from "lodash-es";
+import { partition, sortBy } from "lodash-es";
 import { dayjs, toSearchPattern } from "@/utils";
 
 export type FileExplorerItem = FileExplorerDirectory | FileExplorerFile;
@@ -50,41 +50,39 @@ export function readDirectory(directory: FileSystemDirectoryHandle) {
 
 // filterDirectory
 
-export interface FilterDirectoryOptions {
+export interface FileExplorerFilters {
   search: string;
   sort: "name" | "type" | "size" | "date";
-  descending: boolean;
+  order: "asc" | "desc";
 }
 
 export function filterDirectory(
   items: FileExplorerItem[],
-  { search, sort, descending }: FilterDirectoryOptions
+  { search, sort, order }: FileExplorerFilters
 ) {
   if (search?.trim()) {
     const pattern = toSearchPattern(search);
     items = items.filter(item => pattern.test(item.name));
   }
-
-  const fileSorter: (item: FileExplorerFile) => unknown =
+  let [directories, files] = partition(
+    items,
+    item => item.kind === "directory"
+  );
+  directories = sortBy(directories, dir => dir.name);
+  files = sortBy(
+    files,
     sort === "name"
       ? item => item.name
       : sort === "type"
         ? item => item.type
         : sort === "size"
           ? item => item.file.size
-          : item => item.file.lastModified;
-
-  items = sortBy(
-    items,
-    item => (item.kind === "directory" ? 0 : 1),
-    item => (item.kind === "directory" ? item.name : fileSorter(item))
+          : item => item.file.lastModified
   );
-
-  if (descending) {
-    items = [...items].reverse();
+  if (order === "desc") {
+    files = files.reverse();
   }
-
-  return items;
+  return [...directories, ...files];
 }
 
 // Other

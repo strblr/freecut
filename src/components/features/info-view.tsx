@@ -34,11 +34,8 @@ export function InfoView() {
       raf((event: PointerEvent) => {
         const element = (event.target as Element).closest("[data-info]");
         const key = element?.getAttribute("data-info");
-        if (key && infoMap.has(key)) {
-          setData(infoMap.get(key)!);
-        } else {
-          setData(null);
-        }
+        const data = key && infoMap.get(key);
+        setData(data || null);
       }),
       200
     );

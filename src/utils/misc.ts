@@ -24,5 +24,5 @@ export function toSearchPattern(str: string) {
     .replace(/[|\\{}()[\]^$+?.]/g, "\\$&")
     .replace(/-/g, "\\x2d")
     .replace(/\*/g, ".*");
-  return new RegExp(`^${pattern}$`, "i");
+  return new RegExp(pattern, "i");
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSetState } from "@mantine/hooks";
 import { isNumber, take } from "lodash-es";
 import {
   FileExplorerHeader,
@@ -6,7 +7,7 @@ import {
   ScrollArea
 } from "@/components";
 import { useProject } from "@/hooks";
-import type { FilterDirectoryOptions } from "@/utils";
+import type { FileExplorerFilters } from "@/utils";
 
 export function FileExplorer() {
   const { project } = useProject();
@@ -14,10 +15,10 @@ export function FileExplorer() {
     project.handle
   ]);
 
-  const [filters, setFilters] = useState<FilterDirectoryOptions>({
+  const [filters, setFilters] = useSetState<FileExplorerFilters>({
     search: "",
     sort: "name",
-    descending: false
+    order: "asc"
   });
 
   const handleNavigate = async (dir: FileSystemDirectoryHandle | number) => {
