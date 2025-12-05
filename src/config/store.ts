@@ -20,7 +20,7 @@ export interface CurrentProject {
 export const useStore = create<Store>()(
   persist(
     (set, get) => ({
-      theme: "system",
+      theme: "dark",
       currentProject: null,
       showInfoView: true,
       computedTheme: () => {

@@ -40,7 +40,6 @@ export function ViewMenu({ onLayoutReset }: ViewMenuProps) {
           Reset layout
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuCheckboxItem>Show sidebar</DropdownMenuCheckboxItem>
         <DropdownMenuCheckboxItem
           checked={showInfoView}
           onCheckedChange={useStore.getState().toggleShowInfoView}

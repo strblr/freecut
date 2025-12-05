@@ -16,7 +16,8 @@ import {
   CardHeader,
   CardTitle,
   ScrollArea,
-  Separator
+  Separator,
+  OldProjectorBackground
 } from "@/components";
 import { db } from "@/config";
 import { dayjs, openProjectFromComputer, openProjectFromRecent } from "@/utils";
@@ -28,7 +29,9 @@ export function Welcome() {
 
   return (
     <ScrollArea className="h-screen">
-      <div className="mx-auto max-w-4xl space-y-12 px-6 py-12">
+      <OldProjectorBackground />
+
+      <div className="relative mx-auto max-w-4xl space-y-12 px-6 py-12">
         <div className="space-y-6">
           <div className="flex justify-center">
             <div className="relative">
@@ -72,7 +75,10 @@ export function Welcome() {
             <Card className="group cursor-pointer">
               <CardHeader className="text-center">
                 <div className="mx-auto rounded-full bg-accent p-3 transition-colors group-hover:bg-accent/80">
-                  <FilmIcon className="size-8 text-accent-foreground" />
+                  <FilmIcon
+                    strokeWidth={1}
+                    className="size-8 text-accent-foreground"
+                  />
                 </div>
                 <CardTitle className="text-lg">New Project</CardTitle>
                 <CardDescription>Start from scratch</CardDescription>
@@ -85,7 +91,10 @@ export function Welcome() {
             >
               <CardHeader className="text-center">
                 <div className="mx-auto rounded-full bg-accent p-3 transition-colors group-hover:bg-accent/80">
-                  <VideoIcon className="size-8 text-accent-foreground" />
+                  <VideoIcon
+                    strokeWidth={1}
+                    className="size-8 text-accent-foreground"
+                  />
                 </div>
                 <CardTitle className="text-lg">Open from Computer</CardTitle>
                 <CardDescription>
@@ -97,7 +106,10 @@ export function Welcome() {
             <Card className="group cursor-pointer">
               <CardHeader className="text-center">
                 <div className="mx-auto rounded-full bg-primary p-3 transition-colors group-hover:bg-primary/90">
-                  <SparklesIcon className="size-8 text-primary-foreground" />
+                  <SparklesIcon
+                    strokeWidth={1}
+                    className="size-8 text-primary-foreground"
+                  />
                 </div>
                 <CardTitle className="text-lg">Open from db</CardTitle>
                 <CardDescription>
