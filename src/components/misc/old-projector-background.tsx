@@ -17,7 +17,7 @@ export function OldProjectorBackground() {
     let height = window.innerHeight;
     let flickerIntensitySpike = 0.015;
     const flickerIntensityBase = 0.1;
-    const flickerIntensitySpikeMin = 0.015;
+    const flickerIntensitySpikeMin = 0.02;
     const flickerIntensitySpikeFactor = 0.0225;
     const particleCount = Math.floor((width * height) / 30000);
     const particles = times(particleCount, createParticle);
