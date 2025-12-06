@@ -15,8 +15,10 @@ export function OldProjectorBackground() {
     let delta = 0;
     let width = window.innerWidth;
     let height = window.innerHeight;
-    let flickerIntensity = 0.15;
-    const minFlickerIntensity = 0.1;
+    let flickerIntensitySpike = 0.015;
+    const flickerIntensityBase = 0.1;
+    const flickerIntensitySpikeMin = 0.015;
+    const flickerIntensitySpikeFactor = 0.0225;
     const particleCount = Math.floor((width * height) / 30000);
     const particles = times(particleCount, createParticle);
 
@@ -80,11 +82,14 @@ export function OldProjectorBackground() {
 
     function updateFlicker() {
       if (Math.random() > 0.99 ** delta) {
-        flickerIntensity = 0.1 + Math.random() * 0.15;
+        flickerIntensitySpike =
+          flickerIntensitySpikeMin +
+          Math.random() * flickerIntensitySpikeFactor;
       } else {
-        flickerIntensity *= 0.99 ** delta;
-        if (flickerIntensity < minFlickerIntensity)
-          flickerIntensity = minFlickerIntensity;
+        flickerIntensitySpike = Math.max(
+          flickerIntensitySpike * 0.99 ** delta,
+          flickerIntensitySpikeMin
+        );
       }
     }
 
@@ -105,7 +110,7 @@ export function OldProjectorBackground() {
         maxRadius
       );
 
-      const intensity = minFlickerIntensity + flickerIntensity * 0.15;
+      const intensity = flickerIntensityBase + flickerIntensitySpike;
       beamGradient.addColorStop(0, `rgba(254, 220, 67, ${intensity})`);
       beamGradient.addColorStop(0.3, `rgba(254, 220, 67, ${intensity * 0.6})`);
       beamGradient.addColorStop(0.6, `rgba(254, 220, 67, ${intensity * 0.3})`);
