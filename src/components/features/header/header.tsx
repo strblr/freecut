@@ -23,7 +23,7 @@ export function Header({ onLayoutReset }: HeaderProps) {
     <header className="flex items-center gap-4">
       <div className="flex items-center gap-2">
         <img src="/logo.svg" alt="logo" className="size-6" />
-        <h1 className="text-lg font-bold">FreeCut</h1>
+        <h1 className="text-base font-bold">FreeCut</h1>
       </div>
       <div className="flex items-center gap-1">
         <FileMenu />
@@ -44,7 +44,7 @@ export function Header({ onLayoutReset }: HeaderProps) {
       <div className="ml-auto flex items-center gap-1">
         <Button
           variant="ghost"
-          size="icon-sm"
+          size="icon-xs"
           aria-label="Support FreeCut"
           data-info={i(
             "Support FreeCut",
@@ -55,7 +55,7 @@ export function Header({ onLayoutReset }: HeaderProps) {
         </Button>
         <Button
           variant="ghost"
-          size="icon-sm"
+          size="icon-xs"
           onClick={() => useStore.getState().toggleShowInfoView()}
           aria-label="Toggle info view"
           data-info={i(
