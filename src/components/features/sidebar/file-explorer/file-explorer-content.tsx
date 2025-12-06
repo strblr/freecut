@@ -11,6 +11,7 @@ import { isEmpty, last } from "lodash-es";
 import { queryClient } from "@/config";
 import {
   Button,
+  confirm,
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
@@ -149,6 +150,12 @@ function FileItem({
   };
 
   const handleDelete = async () => {
+    const confirmed = await confirm({
+      title: `Delete ${item.kind}`,
+      message: `Are you sure you want to delete "${item.name}"? This cannot be undone.`,
+      confirmProps: { variant: "destructive", children: "Delete" }
+    });
+    if (!confirmed) return;
     await item.parent.removeEntry(item.name, { recursive: true });
     queryClient.invalidateQueries({ queryKey: ["read-directory"] });
   };

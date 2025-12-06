@@ -99,7 +99,7 @@ export function OldProjectorBackground() {
 
       const centerX = width / 2;
       const centerY = height / 2;
-      const maxRadius = Math.max(width, height) / 2;
+      const maxRadius = Math.min(Math.max(width, height), 1500) / 2;
 
       const beamGradient = ctx.createRadialGradient(
         centerX,

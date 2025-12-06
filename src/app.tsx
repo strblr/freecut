@@ -1,12 +1,19 @@
 import { lazy, Suspense } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/config";
-import { ProjectProvider, ThemeSync, Landing, Spinner } from "@/components";
+import {
+  ProjectProvider,
+  ThemeSync,
+  Landing,
+  Spinner,
+  ConfirmModal
+} from "@/components";
 
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeSync />
+      <ConfirmModal />
       <ProjectProvider fallback={<Landing />}>
         <Suspense
           fallback={
