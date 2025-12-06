@@ -59,10 +59,8 @@ export function FileExplorerContent({
     enabled: !!directory
   });
 
-  const deferredFilters = useDeferredValue(filters);
-  const items = useMemo(
-    () => filterDirectory(data, deferredFilters),
-    [data, deferredFilters]
+  const items = useDeferredValue(
+    useMemo(() => filterDirectory(data, filters), [data, filters])
   );
 
   if (isLoading) {
@@ -212,10 +210,7 @@ interface ImageFileItemProps {
 
 function ImageFileItem({ item }: ImageFileItemProps) {
   const [ref, thumbnail] = useLazyThumbnail(item.file);
-
-  const handlePlaceOnTimeline = () => {
-    console.log("Place on timeline:", item.name);
-  };
+  const handlePlaceOnTimeline = () => {};
 
   return (
     <FileItem

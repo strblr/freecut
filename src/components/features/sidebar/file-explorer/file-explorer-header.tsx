@@ -86,7 +86,7 @@ export function FileExplorerHeader({
 
   const handleSearchChange = useDebouncedCallback(
     (search: string) => onFiltersChange({ search }),
-    200
+    100
   );
 
   useEffect(() => {
