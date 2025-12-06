@@ -79,7 +79,7 @@ export function OldProjectorBackground() {
     }
 
     function updateFlicker() {
-      if (Math.random() < 1 - 0.99 ** delta) {
+      if (Math.random() > 0.99 ** delta) {
         flickerIntensity = 0.1 + Math.random() * 0.15;
       } else {
         flickerIntensity *= 0.99 ** delta;
@@ -118,7 +118,7 @@ export function OldProjectorBackground() {
     }
 
     function drawScanLines() {
-      if (Math.random() < 1 - 0.99 ** delta) {
+      if (Math.random() > 0.99 ** delta) {
         ctx.save();
         ctx.globalCompositeOperation = "screen";
         ctx.globalAlpha = 0.25;

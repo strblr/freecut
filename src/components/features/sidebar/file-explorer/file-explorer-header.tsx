@@ -88,9 +88,7 @@ export function FileExplorerHeader({
   );
 
   useEffect(() => {
-    if (!showSearch) {
-      onFiltersChange({ search: "" });
-    }
+    !showSearch && onFiltersChange({ search: "" });
   }, [showSearch]);
 
   return (

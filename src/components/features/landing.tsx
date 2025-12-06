@@ -5,7 +5,8 @@ import {
   HeartIcon,
   PlayIcon,
   SparklesIcon,
-  VideoIcon
+  VideoIcon,
+  type LucideIcon
 } from "lucide-react";
 import { isEmpty, take } from "lodash-es";
 import {
@@ -20,11 +21,42 @@ import {
   OldProjectorBackground
 } from "@/components";
 import { db } from "@/config";
-import { dayjs, openProjectFromComputer, openProjectFromRecent } from "@/utils";
+import {
+  cn,
+  dayjs,
+  openProjectFromComputer,
+  openProjectFromRecent
+} from "@/utils";
 
-export function Welcome() {
+export function Landing() {
   const recentProjects = useLiveQuery(() =>
     db.recentProjects.orderBy("updatedAt").reverse().toArray()
+  );
+
+  const renderStartingCard = (opts: {
+    icon: LucideIcon;
+    title: string;
+    description: string;
+    primary?: boolean;
+    onClick?: () => void;
+  }) => (
+    <Card
+      onClick={opts.onClick}
+      className="cursor-pointer bg-card/40 backdrop-blur-xs transition-colors hover:bg-card/70"
+    >
+      <CardHeader className="text-center">
+        <div className="mx-auto rounded-full bg-accent p-3">
+          <opts.icon
+            strokeWidth={1}
+            className={cn("size-8 text-accent-foreground", {
+              "text-primary-foreground": opts.primary
+            })}
+          />
+        </div>
+        <CardTitle className="text-lg">{opts.title}</CardTitle>
+        <CardDescription>{opts.description}</CardDescription>
+      </CardHeader>
+    </Card>
   );
 
   return (
@@ -65,64 +97,38 @@ export function Welcome() {
           </div>
         </div>
 
-        <Separator />
+        <Separator className="mx-auto max-w-64" />
 
         <div className="space-y-6">
           <h2 className="text-center text-2xl font-semibold text-foreground">
             Start Creating
           </h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <Card className="group cursor-pointer">
-              <CardHeader className="text-center">
-                <div className="mx-auto rounded-full bg-accent p-3 transition-colors group-hover:bg-accent/80">
-                  <FilmIcon
-                    strokeWidth={1}
-                    className="size-8 text-accent-foreground"
-                  />
-                </div>
-                <CardTitle className="text-lg">New Project</CardTitle>
-                <CardDescription>Start from scratch</CardDescription>
-              </CardHeader>
-            </Card>
+            {renderStartingCard({
+              icon: FilmIcon,
+              title: "New Project",
+              description: "Start from scratch"
+            })}
 
-            <Card
-              className="group cursor-pointer"
-              onClick={openProjectFromComputer}
-            >
-              <CardHeader className="text-center">
-                <div className="mx-auto rounded-full bg-accent p-3 transition-colors group-hover:bg-accent/80">
-                  <VideoIcon
-                    strokeWidth={1}
-                    className="size-8 text-accent-foreground"
-                  />
-                </div>
-                <CardTitle className="text-lg">Open from Computer</CardTitle>
-                <CardDescription>
-                  Open projects from your filesystem
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            {renderStartingCard({
+              icon: VideoIcon,
+              title: "Open from Computer",
+              description: "Open projects from your filesystem",
+              onClick: openProjectFromComputer
+            })}
 
-            <Card className="group cursor-pointer">
-              <CardHeader className="text-center">
-                <div className="mx-auto rounded-full bg-primary p-3 transition-colors group-hover:bg-primary/90">
-                  <SparklesIcon
-                    strokeWidth={1}
-                    className="size-8 text-primary-foreground"
-                  />
-                </div>
-                <CardTitle className="text-lg">Open from db</CardTitle>
-                <CardDescription>
-                  Open projects from your local database
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            {renderStartingCard({
+              primary: true,
+              icon: SparklesIcon,
+              title: "Open from DB",
+              description: "Open projects from your local database"
+            })}
           </div>
         </div>
 
         {recentProjects && !isEmpty(recentProjects) && (
           <>
-            <Separator />
+            <Separator className="mx-auto max-w-64" />
             <div className="space-y-6">
               <h2 className="text-center text-2xl font-semibold text-foreground">
                 Recent Projects
@@ -131,7 +137,7 @@ export function Welcome() {
                 {take(recentProjects, 6).map(project => (
                   <Card
                     key={project.id}
-                    className="cursor-pointer"
+                    className="cursor-pointer bg-card/40 backdrop-blur-xs transition-colors hover:bg-card/70"
                     onClick={() => openProjectFromRecent(project)}
                   >
                     <CardHeader>
@@ -152,7 +158,7 @@ export function Welcome() {
           </>
         )}
 
-        <Separator />
+        <Separator className="mx-auto max-w-64" />
 
         <div className="space-y-6">
           <div className="space-y-4 text-center">
@@ -170,7 +176,7 @@ export function Welcome() {
               <HeartIcon className="size-4" />
               Become a Sponsor
             </Button>
-            <Button variant="ghost" asChild>
+            <Button variant="outline" asChild>
               <a
                 href="https://github.com/strblr/freecut"
                 target="_blank"
