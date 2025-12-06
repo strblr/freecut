@@ -15,7 +15,7 @@ import {
 import { db, useStore } from "@/config";
 import {
   clearRecentProjects,
-  openProjectFromComputer,
+  openProjectFromFileSystem,
   openProjectFromRecent
 } from "@/utils";
 
@@ -34,8 +34,8 @@ export function FileMenu() {
           Open
           <DropdownMenuShortcut>Ctrl+O</DropdownMenuShortcut>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={openProjectFromComputer}>
-          Open from computer
+        <DropdownMenuItem onClick={openProjectFromFileSystem}>
+          Open from files
           <DropdownMenuShortcut>Ctrl+M Ctrl+O</DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuSub>
@@ -50,9 +50,9 @@ export function FileMenu() {
                   onClick={() => openProjectFromRecent(project)}
                 >
                   {project.handle.name}
-                  {project.computer && (
+                  {project.fileSystem && (
                     <Badge variant="outline" className="ml-auto">
-                      Computer
+                      Filesystem
                     </Badge>
                   )}
                 </DropdownMenuItem>

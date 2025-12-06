@@ -24,7 +24,7 @@ import { db } from "@/config";
 import {
   cn,
   dayjs,
-  openProjectFromComputer,
+  openProjectFromFileSystem,
   openProjectFromRecent
 } from "@/utils";
 
@@ -116,9 +116,9 @@ export function Landing() {
 
             {renderStartingCard({
               icon: VideoIcon,
-              title: "Open from Computer",
+              title: "Open from Files",
               description: "Open projects from your filesystem",
-              onClick: openProjectFromComputer
+              onClick: openProjectFromFileSystem
             })}
 
             {renderStartingCard({
@@ -147,8 +147,8 @@ export function Landing() {
                     <CardHeader>
                       <CardTitle className="flex min-w-0 items-center justify-between text-base">
                         <span className="truncate">{project.handle.name}</span>
-                        {project.computer && (
-                          <Badge variant="outline">Computer</Badge>
+                        {project.fileSystem && (
+                          <Badge variant="outline">Filesystem</Badge>
                         )}
                       </CardTitle>
                       <CardDescription>

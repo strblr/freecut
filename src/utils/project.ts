@@ -1,15 +1,15 @@
 import { pick } from "lodash-es";
 import { db, useStore, type RecentProject } from "@/config";
 
-export async function openProjectFromComputer() {
+export async function openProjectFromFileSystem() {
   const handle = await window.showDirectoryPicker({
     mode: "readwrite"
   });
-  const project = { handle, computer: true };
+  const project = { handle, fileSystem: true };
   await db.transaction("rw", db.recentProjects, async () => {
     const existing = await db.recentProjects
       .where({ name: handle.name })
-      .and(project => project.computer === true)
+      .and(project => project.fileSystem === true)
       .first();
     const updatedAt = Date.now();
     if (existing) {
@@ -42,7 +42,7 @@ export async function openProjectFromRecent(project: RecentProject) {
     await db.recentProjects.update(project.id, { updatedAt: Date.now() });
     useStore
       .getState()
-      .setCurrentProject(pick(project, ["handle", "computer"]));
+      .setCurrentProject(pick(project, ["handle", "fileSystem"]));
   }
 }
 

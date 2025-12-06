@@ -4,7 +4,7 @@ export interface RecentProject {
   id: number;
   name: string;
   handle: FileSystemDirectoryHandle;
-  computer: boolean;
+  fileSystem: boolean;
   updatedAt: number;
 }
 

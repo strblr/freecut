@@ -14,7 +14,7 @@ export interface Store {
 
 export interface CurrentProject {
   handle: FileSystemDirectoryHandle;
-  computer: boolean;
+  fileSystem: boolean;
 }
 
 export const useStore = create<Store>()(

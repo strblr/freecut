@@ -35,9 +35,9 @@ export function Header({ onLayoutReset }: HeaderProps) {
       <div className="flex items-center gap-2 text-muted-foreground">
         <FolderIcon className="size-4" />
         <span>{project.handle.name}</span>
-        {project.computer && (
+        {project.fileSystem && (
           <Badge variant="outline" className="ml-auto">
-            Computer
+            Filesystem
           </Badge>
         )}
       </div>
