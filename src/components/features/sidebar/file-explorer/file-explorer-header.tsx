@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useDebouncedCallback } from "@mantine/hooks";
+import { useEffect, useState, type KeyboardEvent } from "react";
+import { useDebouncedCallback, useInputState } from "@mantine/hooks";
 import {
   ArrowDownUpIcon,
   ArrowLeftIcon,
@@ -10,6 +10,13 @@ import {
 import { last } from "lodash-es";
 import {
   Button,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
   FileExplorerCrumbs,
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +25,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   Input,
-  i
+  i,
+  DialogDescription
 } from "@/components";
 import { queryClient } from "@/config";
 import type { FileExplorerFilters } from "@/utils";
@@ -37,18 +45,32 @@ export function FileExplorerHeader({
   onFiltersChange
 }: FileExplorerHeaderProps) {
   const [showSearch, setShowSearch] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const [folderName, setFolderName] = useInputState("");
 
   const handleNavigateBack = () => {
     onNavigate(Math.max(stack.length - 2, 0));
   };
 
-  const handleAddFolder = async () => {
+  const handleFolderNameKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && folderName.trim()) {
+      handleCreateFolder();
+      setShowCreate(false);
+    } else if (e.key === "Escape") {
+      setFolderName("");
+    }
+  };
+
+  const handleCreateFolder = async () => {
+    const name = folderName.trim();
+    if (!name) return;
     const directory = last(stack);
     if (!directory) return;
-    await directory.getDirectoryHandle("New folder", { create: true });
+    await directory.getDirectoryHandle(name, { create: true });
     queryClient.invalidateQueries({
       queryKey: ["read-directory", stack.map(dir => dir.name)]
     });
+    setFolderName("");
   };
 
   const handleSortChange = (sort: string) => {
@@ -75,7 +97,7 @@ export function FileExplorerHeader({
 
   return (
     <div className="border-t border-b bg-secondary px-2 py-1">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <Button
           size="icon-xs"
           variant="ghost"
@@ -90,19 +112,56 @@ export function FileExplorerHeader({
           <ArrowLeftIcon className="size-4" />
         </Button>
         <FileExplorerCrumbs stack={stack} onNavigate={onNavigate} />
-        <Button
-          size="icon-xs"
-          variant="ghost"
-          className="ml-auto"
-          onClick={handleAddFolder}
-          aria-label="Add folder"
-          data-info={i(
-            "Add folder",
-            "Add a new folder to the current directory."
-          )}
-        >
-          <FolderPlusIcon className="size-4" />
-        </Button>
+        <Dialog open={showCreate} onOpenChange={setShowCreate}>
+          <DialogTrigger asChild>
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              className="ml-auto"
+              aria-label="Add folder"
+              data-info={i(
+                "Add folder",
+                "Add a new folder to the current directory."
+              )}
+            >
+              <FolderPlusIcon className="size-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-xs">
+            <DialogHeader>
+              <DialogTitle>Create New Folder</DialogTitle>
+              <DialogDescription>Enter folder name</DialogDescription>
+            </DialogHeader>
+            <Input
+              size="sm"
+              autoFocus
+              placeholder="Folder name..."
+              value={folderName}
+              onChange={setFolderName}
+              onKeyDown={handleFolderNameKeyDown}
+            />
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setFolderName("")}
+                >
+                  Cancel
+                </Button>
+              </DialogClose>
+              <DialogClose asChild>
+                <Button
+                  size="sm"
+                  disabled={!folderName.trim()}
+                  onClick={handleCreateFolder}
+                >
+                  Create
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
