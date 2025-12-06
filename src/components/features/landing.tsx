@@ -45,9 +45,13 @@ export function Landing() {
       className="cursor-pointer bg-card/40 backdrop-blur-xs transition-colors hover:bg-card/70"
     >
       <CardHeader className="text-center">
-        <div className="mx-auto rounded-full bg-accent p-3">
+        <div
+          className={cn("mx-auto rounded-full bg-accent p-3", {
+            "bg-primary": opts.primary
+          })}
+        >
           <opts.icon
-            strokeWidth={1}
+            strokeWidth={1.5}
             className={cn("size-8 text-accent-foreground", {
               "text-primary-foreground": opts.primary
             })}
