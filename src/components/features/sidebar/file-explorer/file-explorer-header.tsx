@@ -67,9 +67,7 @@ export function FileExplorerHeader({
     const directory = last(stack);
     if (!directory) return;
     await directory.getDirectoryHandle(name, { create: true });
-    queryClient.invalidateQueries({
-      queryKey: ["read-directory", stack.map(dir => dir.name)]
-    });
+    queryClient.invalidateQueries({ queryKey: ["read-directory"] });
     setFolderName("");
   };
 

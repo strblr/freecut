@@ -17,6 +17,7 @@ export type FileExplorerDirectory = {
   kind: "directory";
   name: string;
   handle: FileSystemDirectoryHandle;
+  parent: FileSystemDirectoryHandle;
 };
 
 export type FileExplorerFile = {
@@ -25,6 +26,7 @@ export type FileExplorerFile = {
   type: ReturnType<typeof getFileType>;
   file: File;
   handle: FileSystemFileHandle;
+  parent: FileSystemDirectoryHandle;
 };
 
 // readDirectory
@@ -34,14 +36,20 @@ export function readDirectory(directory: FileSystemDirectoryHandle) {
     directory.values(),
     async (handle): Promise<FileExplorerItem> => {
       if (handle.kind === "directory") {
-        return { kind: "directory", name: handle.name, handle };
+        return {
+          kind: "directory",
+          name: handle.name,
+          handle,
+          parent: directory
+        };
       } else {
         return {
           kind: "file",
           name: handle.name,
           type: getFileType(handle.name),
           file: await handle.getFile(),
-          handle
+          handle,
+          parent: directory
         };
       }
     }
@@ -68,11 +76,11 @@ export function filterDirectory(
     items,
     item => item.kind === "directory"
   );
-  directories = sortBy(directories, dir => dir.name);
+  directories = sortBy(directories, dir => dir.name.toLowerCase());
   files = sortBy(
     files,
     sort === "name"
-      ? item => item.name
+      ? item => item.name.toLowerCase()
       : sort === "type"
         ? item => item.type
         : sort === "size"

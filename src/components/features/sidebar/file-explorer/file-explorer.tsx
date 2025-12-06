@@ -21,11 +21,13 @@ export function FileExplorer() {
     order: "asc"
   });
 
-  const handleNavigate = async (dir: FileSystemDirectoryHandle | number) => {
-    if (isNumber(dir)) {
-      setStack(take(stack, dir + 1));
+  const handleNavigate = async (
+    directory: FileSystemDirectoryHandle | number
+  ) => {
+    if (isNumber(directory)) {
+      setStack(take(stack, directory + 1));
     } else {
-      setStack([...stack, dir]);
+      setStack([...stack, directory]);
     }
   };
 

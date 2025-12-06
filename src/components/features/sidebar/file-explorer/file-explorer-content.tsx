@@ -8,6 +8,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, FolderOpenIcon } from "lucide-react";
 import { isEmpty, last } from "lodash-es";
+import { queryClient } from "@/config";
 import {
   Button,
   ContextMenu,
@@ -38,7 +39,7 @@ import {
 interface FileExplorerContentProps {
   stack: FileSystemDirectoryHandle[];
   filters: FileExplorerFilters;
-  onNavigate: (dir: FileSystemDirectoryHandle) => void;
+  onNavigate: (directory: FileSystemDirectoryHandle) => void;
 }
 
 export function FileExplorerContent({
@@ -147,8 +148,9 @@ function FileItem({
     console.log("Rename item:", item.name);
   };
 
-  const handleDelete = () => {
-    console.log("Delete item:", item.name);
+  const handleDelete = async () => {
+    await item.parent.removeEntry(item.name, { recursive: true });
+    queryClient.invalidateQueries({ queryKey: ["read-directory"] });
   };
 
   return (
@@ -210,7 +212,6 @@ interface ImageFileItemProps {
 
 function ImageFileItem({ item }: ImageFileItemProps) {
   const [ref, thumbnail] = useLazyThumbnail(item.file);
-  const handlePlaceOnTimeline = () => {};
 
   return (
     <FileItem
@@ -224,11 +225,6 @@ function ImageFileItem({ item }: ImageFileItemProps) {
             className="size-8 rounded object-cover"
           />
         )
-      }
-      menu={
-        <ContextMenuItem onClick={handlePlaceOnTimeline}>
-          Place on timeline
-        </ContextMenuItem>
       }
     />
   );
