@@ -1,8 +1,5 @@
 import {
   useMemo,
-  useState,
-  useEffect,
-  useRef,
   type HTMLAttributes,
   type Ref,
   type ReactNode,
@@ -13,6 +10,10 @@ import { AlertCircle, FolderOpenIcon } from "lucide-react";
 import { isEmpty, last } from "lodash-es";
 import {
   Button,
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
   Empty,
   EmptyContent,
   EmptyDescription,
@@ -22,6 +23,7 @@ import {
   i,
   Skeleton
 } from "@/components";
+import { useLazyThumbnail } from "@/hooks";
 import {
   cn,
   filterDirectory,
@@ -130,25 +132,53 @@ interface FileItemProps extends HTMLAttributes<HTMLButtonElement> {
   ref?: Ref<HTMLButtonElement>;
   item: FileExplorerItem;
   icon?: ReactNode;
+  menu?: ReactNode;
 }
 
-function FileItem({ ref, item, icon, className, ...props }: FileItemProps) {
+function FileItem({
+  ref,
+  item,
+  icon,
+  menu,
+  className,
+  ...props
+}: FileItemProps) {
   const defaultIcon = useMemo(() => getFileIcon(item), [item]);
+
+  const handleRename = () => {
+    console.log("Rename item:", item.name);
+  };
+
+  const handleDelete = () => {
+    console.log("Delete item:", item.name);
+  };
+
   return (
-    <button
-      ref={ref}
-      data-info={i("File", "Click to select this file.")}
-      {...props}
-      className={cn(
-        "flex w-18 flex-col items-center gap-2 rounded p-1 transition-colors hover:bg-accent hover:text-accent-foreground",
-        className
-      )}
-    >
-      {icon ?? defaultIcon}
-      <span className="line-clamp-3 text-center text-xs leading-tight wrap-anywhere">
-        {item.name}
-      </span>
-    </button>
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <button
+          ref={ref}
+          data-info={i("File", "Click to select this file.")}
+          {...props}
+          className={cn(
+            "flex w-18 flex-col items-center gap-2 rounded p-1 transition-colors hover:bg-accent hover:text-accent-foreground",
+            className
+          )}
+        >
+          {icon ?? defaultIcon}
+          <span className="line-clamp-3 text-center text-xs leading-tight wrap-anywhere">
+            {item.name}
+          </span>
+        </button>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        {menu}
+        <ContextMenuItem onClick={handleRename}>Rename</ContextMenuItem>
+        <ContextMenuItem onClick={handleDelete} variant="destructive">
+          Delete
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }
 
@@ -160,16 +190,16 @@ interface DirectoryItemProps {
 }
 
 function DirectoryItem({ item, onNavigate }: DirectoryItemProps) {
-  const handleClick = () => {
+  const handleOpen = () => {
     onNavigate(item.handle);
   };
-
   return (
     <FileItem
       item={item}
-      onClick={handleClick}
+      onClick={handleOpen}
       className="cursor-pointer"
       data-info={i("Directory", "Click to navigate to this directory.")}
+      menu={<ContextMenuItem onClick={handleOpen}>Open</ContextMenuItem>}
     />
   );
 }
@@ -181,69 +211,11 @@ interface ImageFileItemProps {
 }
 
 function ImageFileItem({ item }: ImageFileItemProps) {
-  const ref = useRef<HTMLButtonElement>(null);
-  const [thumbnail, setThumbnail] = useState<string | null>(null);
+  const [ref, thumbnail] = useLazyThumbnail(item.file);
 
-  useEffect(() => {
-    if (!ref.current) return;
-    let visible = false;
-    let active = true;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry?.isIntersecting || visible || !active) return;
-        visible = true;
-        const img = new Image();
-        const url = URL.createObjectURL(item.file);
-
-        img.onload = async () => {
-          try {
-            const canvas = new OffscreenCanvas(32, 32);
-            const ctx = canvas.getContext("2d");
-            if (!ctx) return;
-
-            const scale = Math.min(32 / img.width, 32 / img.height);
-            const scaledWidth = img.width * scale;
-            const scaledHeight = img.height * scale;
-
-            const x = (32 - scaledWidth) / 2;
-            const y = (32 - scaledHeight) / 2;
-
-            ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
-            const blob = await canvas.convertToBlob({
-              type: "image/jpeg",
-              quality: 0.8
-            });
-            if (!active) return;
-            const thumbnail = URL.createObjectURL(blob);
-            setThumbnail(thumbnail);
-          } finally {
-            URL.revokeObjectURL(url);
-          }
-        };
-
-        img.onerror = () => {
-          URL.revokeObjectURL(url);
-        };
-
-        img.src = url;
-      },
-      { threshold: 0.1 }
-    );
-
-    observer.observe(ref.current);
-    return () => {
-      active = false;
-      observer.disconnect();
-    };
-  }, []);
-
-  useEffect(
-    () => () => {
-      thumbnail && URL.revokeObjectURL(thumbnail);
-    },
-    [thumbnail]
-  );
+  const handlePlaceOnTimeline = () => {
+    console.log("Place on timeline:", item.name);
+  };
 
   return (
     <FileItem
@@ -257,6 +229,11 @@ function ImageFileItem({ item }: ImageFileItemProps) {
             className="size-8 rounded object-cover"
           />
         )
+      }
+      menu={
+        <ContextMenuItem onClick={handlePlaceOnTimeline}>
+          Place on timeline
+        </ContextMenuItem>
       }
     />
   );
